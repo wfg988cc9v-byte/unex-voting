@@ -208,28 +208,28 @@ async function apiCall(systemPrompt, userMsg) {
 }
 
 
-// ══════════════════════════════════════════
-// GOOGLE SHEETS STORAGE
-// ══════════════════════════════════════════
-const GS_API_KEY  = 'AIzaSyDQWUnzC5-0HlXeuOGubljFE8x2dEVwH0k';
-const GS_SHEET_ID = '1uLPu9hCOhAM7vHi_Lmo3LzGZlWTrkgr-2KXVjt7BzpY';
-const GS_TAB      = 'Votes';
-const GS_BASE     = 'https://sheets.googleapis.com/v4/spreadsheets/' + GS_SHEET_ID;
-const GS_COLS     = ['Person', 'malta', 'kreta', 'rhodos', 'athen', 'palma', 'antalya', 'lissabon', 'split', 'ts', 'clearedAt'];
 
-function gsRowsToState(rows) {
+// ══════════════════════════════════════════
+// GOOGLE APPS SCRIPT STORAGE
+// ══════════════════════════════════════════
+const GAS_URL  = 'https://script.google.com/macros/s/AKfycbwT56gq_-qiIFwAfKkJF9gE3w84Uhu8E1mdT2BO2dInc1RV4LqtSxeisX-kPDQP5YgP0A/exec';
+const GS_DESTS = ['malta', 'kreta', 'rhodos', 'athen', 'palma', 'antalya', 'lissabon', 'split'];
+const GS_PERSONS = ['Benno', 'Mike', 'Arne', 'Robin', 'Niklas', 'Max'];
+
+// Parse rows from sheet into state object
+function gasRowsToState(rows) {
   const state = { votes: {}, resultsVisible: false, clearedAt: 0 };
   if (!rows || rows.length < 2) return state;
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (!row || !row[0]) continue;
     const person = row[0];
-    const ca = parseInt(row[10] || '0');
+    const ca = parseInt(row[10] || 0);
     if (ca > state.clearedAt) state.clearedAt = ca;
-    const ts = parseInt(row[9] || '0');
+    const ts = parseInt(row[9] || 0);
     if (!ts) continue;
     const vote = { ts };
-    GS_COLS.slice(1, 9).forEach((destId, idx) => {
+    GS_DESTS.forEach((destId, idx) => {
       const val = row[idx + 1];
       if (val === 'veto') vote[destId] = 'veto';
       else if (val && parseInt(val) > 0) vote[destId] = parseInt(val);
@@ -240,66 +240,66 @@ function gsRowsToState(rows) {
   return state;
 }
 
-function gsVoteToRow(person, vote, clearedAt) {
-  const row = [person];
-  GS_COLS.slice(1, 9).forEach(destId => {
-    const v = vote[destId];
-    row.push(v === 'veto' ? 'veto' : (v > 0 ? String(v) : '0'));
-  });
-  row.push(String(vote.ts || 0));
-  row.push(String(clearedAt || 0));
-  return row;
-}
-
 async function gsRead() {
   try {
-    const url = GS_BASE + '/values/' + encodeURIComponent(GS_TAB + '!A1:K8') + '?key=' + GS_API_KEY;
-    const resp = await fetch(url);
+    const resp = await fetch(GAS_URL + '?action=read');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
-    return gsRowsToState(data.values || []);
+    if (data.error) throw new Error(data.error);
+    return gasRowsToState(data.rows || []);
   } catch(e) {
-    console.warn('[GS] Read failed:', e.message);
+    console.warn('[GAS] Read failed:', e.message);
     return { votes: {}, resultsVisible: false, clearedAt: 0 };
   }
 }
 
 async function gsWriteVote(person, vote, clearedAt) {
-  const rowIdx = PERSONS.indexOf(person);
+  const rowIdx = GS_PERSONS.indexOf(person);
   if (rowIdx < 0) return false;
-  const sheetRow = rowIdx + 2;
-  const row = gsVoteToRow(person, vote, clearedAt);
+  const sheetRow = rowIdx + 2; // row 1=header, row 2+=persons
+  // Build row: [Person, dest1..dest8, ts, clearedAt]
+  const values = [person];
+  GS_DESTS.forEach(d => {
+    const v = vote[d];
+    values.push(v === 'veto' ? 'veto' : (v > 0 ? String(v) : '0'));
+  });
+  values.push(String(vote.ts || 0));
+  values.push(String(clearedAt || 0));
+  // Also write header on row 1 if first person
+  if (rowIdx === 0) {
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ row: 1, values: ['Person', ...GS_DESTS, 'ts', 'clearedAt'] })
+      });
+    } catch(e) {}
+  }
   try {
-    const url = GS_BASE + '/values/' + encodeURIComponent(GS_TAB + '!A' + sheetRow + ':K' + sheetRow)
-      + '?valueInputOption=RAW&key=' + GS_API_KEY;
-    const resp = await fetch(url, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values: [row] })
+    const resp = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ row: sheetRow, values })
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    return true;
+    const data = await resp.json();
+    return data.ok === true;
   } catch(e) {
-    console.warn('[GS] Write failed:', e.message);
+    console.warn('[GAS] Write failed:', e.message);
     return false;
   }
 }
 
 async function gsReset() {
-  const now = Date.now();
-  const emptyRows = PERSONS.map(p => [p,'0','0','0','0','0','0','0','0','0',String(now)]);
   try {
-    const hUrl = GS_BASE + '/values/' + encodeURIComponent(GS_TAB + '!A1:K1') + '?valueInputOption=RAW&key=' + GS_API_KEY;
-    await fetch(hUrl, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ values: [GS_COLS] }) });
-    const url = GS_BASE + '/values/' + encodeURIComponent(GS_TAB + '!A2:K7') + '?valueInputOption=RAW&key=' + GS_API_KEY;
-    const resp = await fetch(url, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ values: emptyRows }) });
+    const resp = await fetch(GAS_URL + '?action=reset');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    return now;
+    const data = await resp.json();
+    return data.clearedAt || Date.now();
   } catch(e) {
-    console.warn('[GS] Reset failed:', e.message);
+    console.warn('[GAS] Reset failed:', e.message);
     return 0;
   }
 }
+
 
 async function readVotes() {
   return await gsRead();
