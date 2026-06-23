@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNEX Strategiemeeting FY 2027 – Abstimmung</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#1B2A4A; --navy-deep:#0D1829; --orange:#F5A623;
+  --off-white:#F2F4F7; --border:rgba(27,42,74,0.12);
+  --green:#16a34a; --red:#CC2222; --amber:#B8860B;
+  --text-primary:#1B2A4A; --text-secondary:#5A6A82; --text-muted:#8A9BB5;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:var(--off-white); color:var(--text-primary); min-height:100vh; }
+
+.page { max-width:680px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+
+/* Header */
+.header { text-align:center; margin-bottom:2.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border); }
+.eyebrow { font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--orange); margin-bottom:.5rem; font-weight:600; }
+.title { font-family:'Playfair Display',serif; font-size:1.9rem; color:var(--navy); margin-bottom:.4rem; }
+.subtitle { font-size:.88rem; color:var(--text-secondary); font-weight:300; line-height:1.6; }
+
+/* Person selector */
+.section-label { font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted); margin-bottom:.6rem; }
+.person-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; margin-bottom:1.5rem; }
+.person-btn {
+  padding:.65rem .5rem; border-radius:10px;
+  border:1.5px solid var(--border); background:white;
+  color:var(--text-secondary); font-size:13px; font-weight:500;
+  cursor:pointer; transition:all .15s; text-align:center;
+}
+.person-btn:hover { border-color:var(--orange); color:var(--navy); }
+.person-btn.active { border-color:var(--orange); background:#FFF3D6; color:var(--navy); font-weight:700; }
+.person-btn.voted { border-color:rgba(22,163,74,.5); color:rgba(22,163,74,.9); background:#f0fdf4; cursor:not-allowed; }
+.person-btn.voted.active { background:#dcfce7; border-color:rgba(22,163,74,.8); }
+
+/* Star grid */
+.star-section { background:white; border:1px solid var(--border); border-radius:14px; padding:1.25rem; margin-bottom:1rem; }
+.rating-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:.75rem; border-bottom:1px solid var(--border); }
+.rating-name { font-size:15px; font-weight:600; color:var(--navy); }
+.rating-hint { font-size:11px; color:var(--text-muted); }
+
+.star-row { display:flex; align-items:center; gap:.6rem; padding:.5rem .4rem; border-radius:8px; transition:background .1s; margin-bottom:.2rem; }
+.star-row:hover { background:var(--off-white); }
+.star-dest { flex:1; display:flex; align-items:center; gap:7px; min-width:0; }
+.s-emoji { font-size:1.1rem; flex-shrink:0; }
+.s-name { font-size:13px; font-weight:500; color:var(--navy); }
+.s-temp { font-size:10px; color:var(--text-muted); }
+.stars { display:flex; gap:2px; flex-shrink:0; }
+.star { font-size:24px; cursor:pointer; color:rgba(27,42,74,.12); transition:color .08s, transform .1s; line-height:1; user-select:none; }
+.star:hover { transform:scale(1.15); }
+.star.lit { color:var(--orange); }
+.veto-btn {
+  background:none; border:1.5px solid var(--border); border-radius:7px;
+  font-size:16px; width:32px; height:32px; cursor:pointer; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .15s;
+}
+.veto-btn:hover { background:rgba(220,38,38,.1); border-color:#dc2626; }
+.veto-btn.active { background:rgba(220,38,38,.12); border-color:#dc2626; }
+.stars.vetoed .star { color:rgba(27,42,74,.05) !important; cursor:not-allowed; }
+.s-val { font-size:12px; font-weight:600; color:var(--text-muted); min-width:14px; text-align:right; }
+
+.budget-bar { text-align:right; font-size:11px; color:var(--text-muted); margin-top:.25rem; }
+.budget-bar.ok { color:var(--green); font-weight:600; }
+
+/* Buttons */
+.btn-primary {
+  width:100%; padding:.85rem; border-radius:50px;
+  background:var(--orange); color:var(--navy-deep); border:none;
+  font-size:.95rem; font-weight:700; cursor:pointer;
+  transition:background .2s, transform .1s;
+  letter-spacing:.02em; margin-top:.75rem;
+}
+.btn-primary:hover { background:#E09010; transform:translateY(-1px); }
+.btn-primary:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+
+/* Status */
+.status-box {
+  background:white; border:1px solid var(--border);
+  border-radius:12px; padding:1rem 1.25rem;
+  margin-top:1rem;
+}
+.status-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem; }
+.status-label { font-size:11px; color:var(--text-muted); }
+.status-bar-wrap { height:4px; background:rgba(27,42,74,.1); border-radius:2px; overflow:hidden; margin:.5rem 0; }
+.status-bar { height:100%; background:linear-gradient(90deg,var(--orange),#ffcc55); border-radius:2px; transition:width .5s; }
+.voted-chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:.5rem; }
+.voted-chip { font-size:11px; padding:3px 9px; border-radius:50px; background:#dcfce7; border:1px solid rgba(22,163,74,.3); color:rgba(22,163,74,.9); }
+.waiting-chip { font-size:11px; padding:3px 9px; border-radius:50px; background:var(--off-white); border:1px solid var(--border); color:var(--text-muted); }
+
+/* Success screen */
+.success-screen { text-align:center; padding:3rem 1rem; display:none; }
+.success-icon { font-size:4rem; margin-bottom:1rem; }
+.success-title { font-family:'Playfair Display',serif; font-size:1.8rem; color:var(--navy); margin-bottom:.5rem; }
+.success-sub { font-size:.9rem; color:var(--text-secondary); line-height:1.6; }
+
+/* Results locked */
+.locked-msg { background:#FFF3D6; border:1px solid rgba(245,166,35,.4); border-radius:12px; padding:1rem 1.25rem; text-align:center; font-size:13px; color:var(--navy); margin-top:1rem; display:none; }
+
+/* Toast */
+.toast { position:fixed; top:1.5rem; left:50%; transform:translateX(-50%) translateY(-80px); background:var(--navy); color:white; padding:.65rem 1.5rem; border-radius:50px; font-size:13px; font-weight:600; z-index:100; transition:transform .3s; pointer-events:none; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* Loading */
+.loading { display:flex; align-items:center; justify-content:center; gap:.5rem; padding:2rem; color:var(--text-muted); font-size:13px; }
+.spinner { width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--orange); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<div class="page">
+  <div class="header">
+    <div style="font-size:1rem;font-weight:700;color:var(--navy);letter-spacing:.05em;margin-bottom:.3rem">UNEX</div>
+    <div class="eyebrow">Strategiemeeting FY 2027</div>
+    <h1 class="title">Standortwahl</h1>
+    <p class="subtitle">Wähle deinen Namen, vergib für jeden Standort bis zu 5 Sterne und bestätige deine Abstimmung. Die Ergebnisse bleiben bis zur Auswertung durch den Admin verborgen.</p>
+  </div>
+
+  <!-- Loading state -->
+  <div id="loadingState" class="loading">
+    <div class="spinner"></div> Lade Abstimmungsdaten…
+  </div>
+
+  <!-- Main voting UI -->
+  <div id="mainUI" style="display:none">
+
+    <div class="section-label">Wer bist du?</div>
+    <div class="person-grid" id="personGrid"></div>
+
+    <div id="starSection" class="star-section" style="display:none">
+      <div class="rating-header">
+        <div class="rating-name" id="ratingName">—</div>
+        <div class="rating-hint">5 Sterne pro Standort möglich</div>
+      </div>
+      <div id="starGrid"></div>
+      <div class="budget-bar" id="budgetBar"></div>
+      <button class="btn-primary" id="submitBtn" onclick="submitVote()">Abstimmung abschicken ↗</button>
+    </div>
+
+    <div class="locked-msg" id="lockedMsg">
+      🔒 Du hast bereits abgestimmt. Die Ergebnisse werden nach Abschluss aller Stimmen vom Admin freigegeben.
+    </div>
+
+    <div class="status-box" id="statusBox">
+      <div class="status-row">
+        <span class="status-label" id="statusText">0 / 6 abgestimmt</span>
+      </div>
+      <div class="status-bar-wrap"><div class="status-bar" id="statusBar" style="width:0%"></div></div>
+      <div class="voted-chips" id="votedChips"></div>
+    </div>
+  </div>
+
+  <!-- Success screen -->
+  <div id="successScreen" class="success-screen">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Danke, <span id="successName"></span>!</div>
+    <p class="success-sub">Deine Abstimmung wurde gespeichert.<br>Die Ergebnisse werden nach Eingang aller Stimmen vom Admin freigegeben.</p>
+    <div class="status-box" style="margin-top:1.5rem;text-align:left" id="successStatus">
+      <div class="status-row">
+        <span class="status-label" id="successStatusText">0 / 6 abgestimmt</span>
+      </div>
+      <div class="status-bar-wrap"><div class="status-bar" id="successStatusBar" style="width:0%"></div></div>
+      <div class="voted-chips" id="successChips"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG — shared across voting.html and master.html
+// ══════════════════════════════════════════
+const STORAGE_KEY = 'unex_votes_fy2027_v1';
+const PERSONS = ['Benno','Mike','Arne','Robin','Niklas','Max'];
+const DESTS = [
+  {id:'malta',    name:'Malta',    temp:'27°C', emoji:'🏝️'},
+  {id:'kreta',    name:'Kreta',    temp:'27°C', emoji:'🏛️'},
+  {id:'rhodos',   name:'Rhodos',   temp:'26°C', emoji:'⚔️'},
+  {id:'athen',    name:'Athen',    temp:'28°C', emoji:'🏺'},
+  {id:'palma',    name:'Palma',    temp:'26°C', emoji:'⛵'},
+  {id:'antalya',  name:'Antalya',  temp:'30°C', emoji:'🌊'},
+  {id:'lissabon', name:'Lissabon', temp:'24°C', emoji:'🎵'},
+  {id:'split',    name:'Split',    temp:'25°C', emoji:'⚓'},
+];
+
+// ══════════════════════════════════════════
+// STORAGE — Claude API as shared backend
+// ══════════════════════════════════════════
+async function apiCall(systemPrompt, userMsg) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMsg }]
+    })
+  });
+  const data = await resp.json();
+  return data.content?.[0]?.text || '';
+}
+
+
+// ══════════════════════════════════════════
+// GOOGLE SHEETS STORAGE
+// ══════════════════════════════════════════
+const GS_API_KEY  = 'AIzaSyDQWUnzC5-0HlXeuOGubljFE8x2dEVwH0k';
+const GS_SHEET_ID = '1uLPu9hCOhAM7vHi_Lmo3LzGZlWTrkgr-2KXVjt7BzpY';
+const GS_TAB      = 'Votes';
+const GS_BASE     = 'https://sheets.googleapis.com/v4/spreadsheets/' + GS_SHEET_ID;
+const GS_COLS     = ['Person', 'malta', 'kreta', 'rhodos', 'athen', 'palma', 'antalya', 'lissabon', 'split', 'ts', 'clearedAt'];
+
+function gsRowsToState(rows) {
+  const state = { votes: {}, resultsVisible: false, clearedAt: 0 };
+  if (!rows || rows.length < 2) return state;
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || !row[0]) continue;
+    const person = row[0];
+    const ca = parseInt(row[10] || '0');
+    if (ca > state.clearedAt) state.clearedAt = ca;
+    const ts = parseInt(row[9] || '0');
+    if (!ts) continue;
+    const vote = { ts };
+    GS_COLS.slice(1, 9).forEach((destId, idx) => {
+      const val = row[idx + 1];
+      if (val === 'veto') vote[destId] = 'veto';
+      else if (val && parseInt(val) > 0) vote[destId] = parseInt(val);
+      else vote[destId] = 0;
+    });
+    state.votes[person] = vote;
+  }
+  return state;
+}
+
+function gsVoteToRow(person, vote, clearedAt) {
+  const row = [person];
+  GS_COLS.slice(1, 9).forEach(destId => {
+    const v = vote[destId];
+    row.push(v === 'veto' ? 'veto' : (v > 0 ? String(v) : '0'));
+  });
+  row.push(String(vote.ts || 0));
+  row.push(String(clearedAt || 0));
+  return row;
+}
+
+async function gsRead() {
+  try {
+    const url = GS_BASE + '/values/' + encodeURIComponent(GS_TAB + '!A1:K8') + '?key=' + GS_API_KEY;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    return gsRowsToState(data.values || []);
+  } catch(e) {
+    console.warn('[GS] Read failed:', e.message);
+    return { votes: {}, resultsVisible: false, clearedAt: 0 };
+  }
+}
+
+async function gsWriteVote(person, vote, clearedAt) {
+  const rowIdx = PERSONS.indexOf(person);
+  if (rowIdx < 0) return false;
+  const sheetRow = rowIdx + 2;
+  const row = gsVoteToRow(person, vote, clearedAt);
+  try {
+    const url = GS_BASE + '/values/' + encodeURIComponent(GS_TAB + '!A' + sheetRow + ':K' + sheetRow)
+      + '?valueInputOption=RAW&key=' + GS_API_KEY;
+    const resp = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: [row] })
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return true;
+  } catch(e) {
+    console.warn('[GS] Write failed:', e.message);
+    return false;
+  }
+}
+
+async function gsReset() {
+  const now = Date.now();
+  const emptyRows = PERSONS.map(p => [p,'0','0','0','0','0','0','0','0','0',String(now)]);
+  try {
+    const hUrl = GS_BASE + '/values/' + encodeURIComponent(GS_TAB + '!A1:K1') + '?valueInputOption=RAW&key=' + GS_API_KEY;
+    await fetch(hUrl, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ values: [GS_COLS] }) });
+    const url = GS_BASE + '/values/' + encodeURIComponent(GS_TAB + '!A2:K7') + '?valueInputOption=RAW&key=' + GS_API_KEY;
+    const resp = await fetch(url, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ values: emptyRows }) });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return now;
+  } catch(e) {
+    console.warn('[GS] Reset failed:', e.message);
+    return 0;
+  }
+}
+
+async function readVotes() {
+  return await gsRead();
+}
+async function writeVotes(state) {
+  // No-op: individual vote writes use gsWriteVote directly
+}
+
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let activePerson = null;
+let draft = {};
+let state = { votes: {}, resultsVisible: false };
+const myVotedKey = 'unex_my_vote_fy2027';
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+async function init() {
+  document.getElementById('loadingState').style.display = 'flex';
+  document.getElementById('mainUI').style.display = 'none';
+
+  state = await readVotes();
+
+  document.getElementById('loadingState').style.display = 'none';
+
+  // Check if this user already voted (stored locally per device)
+  const myVote = localStorage.getItem(myVotedKey);
+  const myVoteTs = parseInt(localStorage.getItem(myVotedKey + '_ts') || '0');
+  // If admin reset happened after our vote, clear the local lock
+  if (myVote && state.clearedAt && myVoteTs < state.clearedAt) {
+    localStorage.removeItem(myVotedKey);
+    localStorage.removeItem(myVotedKey + '_ts');
+  } else if (myVote) {
+    showSuccess(myVote);
+    updateStatus();
+    return;
+  }
+
+  document.getElementById('mainUI').style.display = '';
+  buildPersonGrid();
+  updateStatus();
+
+  // Poll for status updates every 15s
+  setInterval(async () => {
+    state = await readVotes();
+    updateStatus();
+  }, 15000);
+}
+
+// ══════════════════════════════════════════
+// PERSON GRID
+// ══════════════════════════════════════════
+function buildPersonGrid() {
+  const grid = document.getElementById('personGrid');
+  grid.innerHTML = '';
+  PERSONS.forEach(p => {
+    const btn = document.createElement('button');
+    const hasVoted = !!state.votes[p];
+    btn.className = 'person-btn' + (hasVoted ? ' voted' : '') + (p === activePerson ? ' active' : '');
+    btn.textContent = p + (hasVoted ? ' ✓' : '');
+    btn.disabled = hasVoted;
+    btn.onclick = () => selectPerson(p);
+    grid.appendChild(btn);
+  });
+}
+
+function selectPerson(p) {
+  if (state.votes[p]) return; // already voted
+  activePerson = p;
+  draft = {};
+  document.getElementById('ratingName').textContent = 'Bewertung für: ' + p;
+  document.getElementById('starSection').style.display = '';
+  document.getElementById('lockedMsg').style.display = 'none';
+  buildStarGrid();
+  buildPersonGrid();
+}
+
+// ══════════════════════════════════════════
+// STAR GRID
+// ══════════════════════════════════════════
+function buildStarGrid() {
+  const grid = document.getElementById('starGrid');
+  grid.innerHTML = '';
+  DESTS.forEach(d => {
+    const rawVal = draft[d.id];
+    const val = rawVal === 'veto' ? 0 : (rawVal || 0);
+    const isVeto = rawVal === 'veto';
+
+    const row = document.createElement('div');
+    row.className = 'star-row';
+
+    // Dest info
+    const info = document.createElement('div');
+    info.className = 'star-dest';
+    info.innerHTML = `<span class="s-emoji">${d.emoji}</span><div><div class="s-name">${d.name}</div><div class="s-temp">${d.temp}</div></div>`;
+
+    // Veto
+    const veto = document.createElement('button');
+    veto.className = 'veto-btn' + (isVeto ? ' active' : '');
+    veto.textContent = '🚫';
+    veto.title = 'Veto';
+    veto.addEventListener('click', () => { draft[d.id] = isVeto ? 0 : 'veto'; buildStarGrid(); updateBudget(); });
+
+    // Stars
+    const starsDiv = document.createElement('div');
+    starsDiv.className = 'stars' + (isVeto ? ' vetoed' : '');
+    starsDiv.id = 'sr-' + d.id;
+    for (let n = 1; n <= 5; n++) {
+      const s = document.createElement('span');
+      s.className = 'star' + (n <= val && !isVeto ? ' lit' : '');
+      s.textContent = '★';
+      s.addEventListener('mouseenter', () => { if (draft[d.id] !== 'veto') hover(d.id, n); });
+      s.addEventListener('mouseleave', () => { if (draft[d.id] !== 'veto') unhover(d.id); });
+      s.addEventListener('click', () => { if (draft[d.id] !== 'veto') clickStar(d.id, n); });
+      starsDiv.appendChild(s);
+    }
+
+    const valDiv = document.createElement('div');
+    valDiv.className = 's-val'; valDiv.id = 'sv-' + d.id;
+    valDiv.textContent = isVeto ? '🚫' : (val || '');
+
+    row.appendChild(info); row.appendChild(veto); row.appendChild(starsDiv); row.appendChild(valDiv);
+    grid.appendChild(row);
+  });
+  updateBudget();
+}
+
+function hover(id, n) { document.querySelectorAll('#sr-'+id+' .star').forEach((s,i) => s.classList.toggle('lit', i < n)); }
+function unhover(id) { const v = draft[id]; document.querySelectorAll('#sr-'+id+' .star').forEach((s,i) => s.classList.toggle('lit', i < (v === 'veto' ? 0 : (v||0)))); }
+function clickStar(id, n) { draft[id] = draft[id] === n ? 0 : n; const v = draft[id]; document.querySelectorAll('#sr-'+id+' .star').forEach((s,i) => s.classList.toggle('lit', i<v)); document.getElementById('sv-'+id).textContent = v||''; updateBudget(); }
+
+function updateBudget() {
+  const rated = Object.values(draft).filter(v => v !== 'veto' && v > 0).length;
+  const vetos = Object.values(draft).filter(v => v === 'veto').length;
+  const el = document.getElementById('budgetBar');
+  if (!el) return;
+  el.textContent = (rated + vetos) + ' / ' + DESTS.length + ' Standorte bewertet' + (vetos ? ' · ' + vetos + '× Veto' : '');
+  el.className = 'budget-bar' + (rated + vetos === DESTS.length ? ' ok' : '');
+}
+
+// ══════════════════════════════════════════
+// SUBMIT
+// ══════════════════════════════════════════
+async function submitVote() {
+  if (!activePerson) return;
+  const hasAny = Object.values(draft).some(v => v === 'veto' || v > 0);
+  if (!hasAny) { toast('⚠ Bitte mindestens einen Standort bewerten'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Wird gespeichert…';
+
+  state = await readVotes();
+  const voteData = { ...draft, ts: Date.now() };
+  const ok = await gsWriteVote(activePerson, voteData, state.clearedAt || 0);
+  window._lastGsOk = ok;
+  state.votes[activePerson] = voteData;
+
+  // Remember this device voted (with timestamp for reset-unlock)
+  localStorage.setItem(myVotedKey, activePerson);
+  localStorage.setItem(myVotedKey + '_ts', Date.now());
+  const syncInfo = window._lastSyncMode || 'unbekannt';
+  const isShared = syncInfo.includes('google sheets ok');
+  toast(ok ? '✓ Stimme gespeichert & synchronisiert' : '✓ Gespeichert (nur lokal — Sheet nicht erreichbar)');
+  setTimeout(() => showSuccess(activePerson), 800);
+}
+
+// ══════════════════════════════════════════
+// STATUS & SUCCESS
+// ══════════════════════════════════════════
+function updateStatus() {
+  const voted = PERSONS.filter(p => state.votes[p]);
+  const pct = Math.round(voted.length / PERSONS.length * 100);
+
+  ['statusText','successStatusText'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = voted.length + ' / ' + PERSONS.length + ' Personen haben abgestimmt';
+  });
+  ['statusBar','successStatusBar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.width = pct + '%';
+  });
+  ['votedChips','successChips'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+    PERSONS.forEach(p => {
+      const chip = document.createElement('span');
+      chip.className = state.votes[p] ? 'voted-chip' : 'waiting-chip';
+      chip.textContent = p + (state.votes[p] ? ' ✓' : ' …');
+      el.appendChild(chip);
+    });
+  });
+}
+
+async function showSuccess(name) {
+  document.getElementById('mainUI').style.display = 'none';
+  document.getElementById('successScreen').style.display = 'block';
+  document.getElementById('successName').textContent = name;
+  // Show sync status
+  const ss = document.getElementById('syncStatus');
+  if (ss) {
+    const mode = window._lastSyncMode || '';
+    const ok = mode.includes('shared storage ✓');
+    ss.textContent = window._lastGsOk ? '🟢 Google Sheets Sync aktiv — Admin sieht deine Stimme' : '🟡 Nur lokal gespeichert — Sheet nicht erreichbar';
+    ss.style.background = window._lastGsOk ? '#dcfce7' : '#fef9c3';
+    ss.style.color = window._lastGsOk ? '#166534' : '#854d0e';
+  }
+  updateStatus();
+  setInterval(async () => { state = await readVotes(); updateStatus(); }, 10000);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// START
+init();
+</script>
+</body>
+</html>
