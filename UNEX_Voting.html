@@ -511,7 +511,21 @@ async function showSuccess(name) {
     ss.style.color = window._lastGsOk ? '#166534' : '#854d0e';
   }
   updateStatus();
-  setInterval(async () => { state = await readVotes(); updateStatus(); }, 10000);
+  setInterval(async () => {
+    state = await readVotes();
+    updateStatus();
+    // Check if admin reset — if our vote is gone from sheet, unlock
+    const myVote = localStorage.getItem(VOTE_LOCK_KEY);
+    if (myVote && !state.votes[myVote]) {
+      localStorage.removeItem(VOTE_LOCK_KEY);
+      localStorage.removeItem(VOTE_LOCK_KEY + '_ts');
+      document.getElementById('vSuccessScreen').style.display = 'none';
+      document.getElementById('vMainUI').style.display = '';
+      vActivePerson = null; vDraft = {};
+      vBuildPersonGrid(); vUpdateStatus();
+      const ss = document.getElementById('vStarSection'); if(ss) ss.style.display='none';
+    }
+  }, 8000);
 }
 
 function toast(msg) {
