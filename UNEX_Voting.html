@@ -161,6 +161,9 @@ body { font-family:'Inter',sans-serif; background:var(--off-white); color:var(--
     <div class="success-icon">✅</div>
     <div class="success-title">Danke, <span id="successName"></span>!</div>
     <p class="success-sub">Deine Abstimmung wurde gespeichert.<br>Die Ergebnisse werden nach Eingang aller Stimmen vom Admin freigegeben.</p>
+    <div style="margin-top:1rem">
+      <button onclick="unlockAndReset()" style="background:none;border:1px solid #ddd;border-radius:50px;font-size:12px;color:#888;cursor:pointer;padding:.45rem 1.1rem">🔓 Neu abstimmen / Sperre aufheben</button>
+    </div>
     <div class="status-box" style="margin-top:1.5rem;text-align:left" id="successStatus">
       <div class="status-row">
         <span class="status-label" id="successStatusText">0 / 6 abgestimmt</span>
@@ -332,13 +335,18 @@ async function init() {
   const myVote = localStorage.getItem(myVotedKey);
   const myVoteTs = parseInt(localStorage.getItem(myVotedKey + '_ts') || '0');
   // If admin reset happened after our vote, clear the local lock
-  if (myVote && state.clearedAt && myVoteTs < state.clearedAt) {
-    localStorage.removeItem(myVotedKey);
-    localStorage.removeItem(myVotedKey + '_ts');
-  } else if (myVote) {
-    showSuccess(myVote);
-    updateStatus();
-    return;
+  if (myVote) {
+    const wasReset = (state.clearedAt && myVoteTs < state.clearedAt);
+    const voteGone = !state.votes[myVote];
+    if (wasReset || voteGone) {
+      // Reset detected — clear local lock
+      localStorage.removeItem(myVotedKey);
+      localStorage.removeItem(myVotedKey + '_ts');
+    } else {
+      showSuccess(myVote);
+      updateStatus();
+      return;
+    }
   }
 
   document.getElementById('mainUI').style.display = '';
@@ -501,31 +509,32 @@ async function showSuccess(name) {
   document.getElementById('mainUI').style.display = 'none';
   document.getElementById('successScreen').style.display = 'block';
   document.getElementById('successName').textContent = name;
-  // Show sync status
   const ss = document.getElementById('syncStatus');
   if (ss) {
-    const mode = window._lastSyncMode || '';
-    const ok = mode.includes('shared storage ✓');
-    ss.textContent = window._lastGsOk ? '🟢 Google Sheets Sync aktiv — Admin sieht deine Stimme' : '🟡 Nur lokal gespeichert — Sheet nicht erreichbar';
+    ss.textContent = window._lastGsOk ? '🟢 Google Sheets Sync aktiv' : '🟡 Nur lokal gespeichert';
     ss.style.background = window._lastGsOk ? '#dcfce7' : '#fef9c3';
     ss.style.color = window._lastGsOk ? '#166534' : '#854d0e';
   }
   updateStatus();
+  // Poll: auto-unlock if admin reset (vote gone from sheet)
   setInterval(async () => {
     state = await readVotes();
     updateStatus();
-    // Check if admin reset — if our vote is gone from sheet, unlock
-    const myVote = localStorage.getItem(VOTE_LOCK_KEY);
+    const myVote = localStorage.getItem(myVotedKey);
     if (myVote && !state.votes[myVote]) {
-      localStorage.removeItem(VOTE_LOCK_KEY);
-      localStorage.removeItem(VOTE_LOCK_KEY + '_ts');
-      document.getElementById('vSuccessScreen').style.display = 'none';
-      document.getElementById('vMainUI').style.display = '';
-      vActivePerson = null; vDraft = {};
-      vBuildPersonGrid(); vUpdateStatus();
-      const ss = document.getElementById('vStarSection'); if(ss) ss.style.display='none';
+      unlockAndReset();
     }
   }, 8000);
+}
+
+function unlockAndReset() {
+  localStorage.removeItem(myVotedKey);
+  localStorage.removeItem(myVotedKey + '_ts');
+  activePerson = null; draft = {};
+  document.getElementById('successScreen').style.display = 'none';
+  document.getElementById('mainUI').style.display = '';
+  const ss = document.getElementById('starSection'); if(ss) ss.style.display='none';
+  buildPersonGrid(); updateStatus();
 }
 
 function toast(msg) {
