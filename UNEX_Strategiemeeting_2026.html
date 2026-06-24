@@ -286,6 +286,9 @@ body { font-family:'Inter',sans-serif; background:var(--navy-deep); color:var(--
   .winner-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 60% 40%,rgba(245,166,35,.15),transparent 60%); }
   .ranking-row { display:flex; align-items:flex-start; gap:.65rem; padding:.5rem .65rem; border-radius:8px; margin-bottom:.3rem; background:var(--off-white); }
   .ranking-row.first { background:#FFF3D6; border:1px solid rgba(245,166,35,.3); }
+  .ranking-row-vetoed { background:#fef2f2 !important; border:1px solid #fecaca; opacity:.75; }
+  .rk-name-vetoed { color:#9ca3af !important; text-decoration:line-through; }
+  .rk-pts-vetoed { font-size:11px; color:#dc2626; font-weight:600; min-width:90px; text-align:right; }
   .rk-pos { font-size:13px; min-width:26px; color:var(--text-muted); }
   .rk-name { font-size:13px; color:var(--navy); font-weight:500; }
   .rk-name-wrap { flex:1; display:flex; flex-direction:column; gap:3px; min-width:0; }
@@ -352,6 +355,9 @@ body { font-family:'Inter',sans-serif; background:var(--navy-deep); color:var(--
   .winner-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 60% 40%,rgba(245,166,35,.15),transparent 60%); }
   .ranking-row { display:flex; align-items:flex-start; gap:.65rem; padding:.5rem .65rem; border-radius:8px; margin-bottom:.3rem; background:var(--off-white); }
   .ranking-row.first { background:#FFF3D6; border:1px solid rgba(245,166,35,.3); }
+  .ranking-row-vetoed { background:#fef2f2 !important; border:1px solid #fecaca; opacity:.75; }
+  .rk-name-vetoed { color:#9ca3af !important; text-decoration:line-through; }
+  .rk-pts-vetoed { font-size:11px; color:#dc2626; font-weight:600; min-width:90px; text-align:right; }
   .rk-pos { font-size:13px; min-width:26px; color:var(--text-muted); }
   .rk-name { font-size:13px; color:var(--navy); font-weight:500; }
   .rk-name-wrap { flex:1; display:flex; flex-direction:column; gap:3px; min-width:0; }
@@ -1902,29 +1908,78 @@ function renderResults() {
     });
   });
   const voterCount = PERSONS.filter(p => adminState.votes[p]).length;
-  const sorted = [...DESTS].sort((a,b) => totals[b.id].pts - totals[a.id].pts);
   const maxPts = voterCount * 5;
-  const winner = sorted[0];
+
+  // Veto = K.O.: vetoed destinations sink to bottom, sorted by veto count then pts
+  const sorted = [...DESTS].sort((a,b) => {
+    const aVetoed = totals[a.id].vetos.length > 0;
+    const bVetoed = totals[b.id].vetos.length > 0;
+    if (aVetoed && !bVetoed) return 1;   // a goes to bottom
+    if (!aVetoed && bVetoed) return -1;  // b goes to bottom
+    if (aVetoed && bVetoed) return totals[b.id].vetos.length - totals[a.id].vetos.length; // more vetos = lower
+    return totals[b.id].pts - totals[a.id].pts; // normal sort by pts
+  });
+
+  // Winner = first non-vetoed destination
+  const winner = sorted.find(d => totals[d.id].vetos.length === 0) || sorted[0];
   const wn = document.getElementById('winnerName');
   const ws = document.getElementById('winnerScore');
   if (wn) wn.textContent = winner.emoji + '  ' + winner.name;
-  if (ws) ws.textContent = totals[winner.id].pts + ' von ' + maxPts + ' möglichen Sternen (' + (maxPts>0?Math.round(totals[winner.id].pts/maxPts*100):0) + '%) · ' + totals[winner.id].vetos.length + ' Veto(s)';
+  if (ws) {
+    const wVetoed = totals[winner.id].vetos.length > 0;
+    if (wVetoed) {
+      ws.textContent = '⚠ Alle Ziele haben ein Veto erhalten';
+    } else {
+      ws.textContent = totals[winner.id].pts + ' von ' + maxPts + ' möglichen Sternen (' + (maxPts>0?Math.round(totals[winner.id].pts/maxPts*100):0) + '%)';
+    }
+  }
+
   const list = document.getElementById('rankingList');
   if (!list) return;
   list.innerHTML = '';
   sorted.forEach((d, rank) => {
     const t = totals[d.id];
-    const barPct = maxPts > 0 ? Math.round(t.pts / maxPts * 100) : 0;
-    const medal = rank===0?'🥇':rank===1?'🥈':rank===2?'🥉':(rank+1)+'.';
+    const isVetoed = t.vetos.length > 0;
+    const barPct = (!isVetoed && maxPts > 0) ? Math.round(t.pts / maxPts * 100) : 0;
+
+    // Only give medals to non-vetoed destinations
+    const nonVetoedRank = sorted.slice(0, rank).filter(x => totals[x.id].vetos.length === 0).length;
+    let medal;
+    if (isVetoed) {
+      medal = '<span style="font-size:16px">🚫</span>';
+    } else {
+      medal = nonVetoedRank===0?'🥇':nonVetoedRank===1?'🥈':nonVetoedRank===2?'🥉':(nonVetoedRank+1)+'.';
+    }
+
     const row = document.createElement('div');
-    row.className = 'ranking-row' + (rank===0?' first':'');
-    const vetoHtml = t.vetos.length
-        ? '<span class="veto-badge" title="Veto von: ' + t.vetos.join(', ') + '">🚫 ' + t.vetos.join(', ') + '</span>'
-        : '';
-      row.innerHTML = '<div class="rk-pos">' + medal + '</div>' +
-        '<div class="rk-name-wrap"><div class="rk-name">' + d.emoji + ' ' + d.name + '</div>' + vetoHtml + '</div>' +
+    // Vetoed rows: grey, struck-through style, pushed to bottom section
+    if (isVetoed) {
+      row.className = 'ranking-row ranking-row-vetoed';
+    } else {
+      row.className = 'ranking-row' + (nonVetoedRank===0?' first':'');
+    }
+
+    const vetoNames = t.vetos.join(', ');
+    const vetoHtml = isVetoed
+      ? '<span class="veto-badge">🚫 Veto — ' + vetoNames + '</span>'
+      : '';
+
+    if (isVetoed) {
+      row.innerHTML =
+        '<div class="rk-pos">' + medal + '</div>' +
+        '<div class="rk-name-wrap">' +
+          '<div class="rk-name rk-name-vetoed">' + d.emoji + ' ' + d.name + '</div>' +
+          vetoHtml +
+        '</div>' +
+        '<div class="rk-bar-wrap"><div class="rk-bar" style="width:0%;background:#fca5a5"></div></div>' +
+        '<div class="rk-pts rk-pts-vetoed">Ausgeschlossen</div>';
+    } else {
+      row.innerHTML =
+        '<div class="rk-pos">' + medal + '</div>' +
+        '<div class="rk-name-wrap"><div class="rk-name">' + d.emoji + ' ' + d.name + '</div></div>' +
         '<div class="rk-bar-wrap"><div class="rk-bar" style="width:' + barPct + '%"></div></div>' +
         '<div class="rk-pts">' + t.pts + ' Pkt · ' + t.voters.length + ' Votes</div>';
+    }
     list.appendChild(row);
   });
 }
