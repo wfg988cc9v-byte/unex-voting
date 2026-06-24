@@ -217,7 +217,7 @@ async function apiCall(systemPrompt, userMsg) {
 // GOOGLE APPS SCRIPT STORAGE
 // ══════════════════════════════════════════
 const GAS_URL  = 'https://script.google.com/macros/s/AKfycbwT56gq_-qiIFwAfKkJF9gE3w84Uhu8E1mdT2BO2dInc1RV4LqtSxeisX-kPDQP5YgP0A/exec';
-const GS_DESTS = ['malta', 'kreta', 'rhodos', 'athen', 'palma', 'antalya', 'lissabon', 'split'];
+const GS_DESTS = ['malta', 'kreta', 'rhodos', 'athen', 'palma', 'antalya', 'lissabon', 'split', 'madrid'];
 const GS_PERSONS = ['Benno', 'Mike', 'Arne', 'Robin', 'Niklas', 'Max'];
 
 // Parse rows from sheet into state object
@@ -228,9 +228,9 @@ function gasRowsToState(rows) {
     const row = rows[i];
     if (!row || !row[0]) continue;
     const person = row[0];
-    const ca = parseInt(row[10] || 0);
+    const ca = parseInt(row[11] || 0);
     if (ca > state.clearedAt) state.clearedAt = ca;
-    const ts = parseInt(row[9] || 0);
+    const ts = parseInt(row[10] || 0);
     if (!ts) continue;
     const vote = { ts };
     GS_DESTS.forEach((destId, idx) => {
