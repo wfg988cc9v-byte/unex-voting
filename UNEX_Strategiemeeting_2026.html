@@ -284,10 +284,19 @@ body { font-family:'Inter',sans-serif; background:var(--navy-deep); color:var(--
   .no-vote-cell { color:var(--text-muted); font-style:italic; }
   .winner-banner { background:linear-gradient(135deg,var(--navy) 0%,#2C4A7A 100%); border-radius:14px; padding:2rem; margin-bottom:1rem; position:relative; overflow:hidden; }
   .winner-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 60% 40%,rgba(245,166,35,.15),transparent 60%); }
-  .ranking-row { display:flex; align-items:center; gap:.65rem; padding:.5rem .65rem; border-radius:8px; margin-bottom:.3rem; background:var(--off-white); }
+  .ranking-row { display:flex; align-items:flex-start; gap:.65rem; padding:.5rem .65rem; border-radius:8px; margin-bottom:.3rem; background:var(--off-white); }
   .ranking-row.first { background:#FFF3D6; border:1px solid rgba(245,166,35,.3); }
   .rk-pos { font-size:13px; min-width:26px; color:var(--text-muted); }
-  .rk-name { flex:1; font-size:13px; color:var(--navy); font-weight:500; }
+  .rk-name { font-size:13px; color:var(--navy); font-weight:500; }
+  .rk-name-wrap { flex:1; display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .veto-badge {
+    display:inline-flex; align-items:center; gap:4px;
+    background:#fef2f2; border:1px solid #fecaca;
+    color:#dc2626; border-radius:6px;
+    font-size:11px; font-weight:600;
+    padding:2px 8px; width:fit-content;
+    cursor:default;
+  }
   .rk-bar-wrap { width:100px; height:5px; background:rgba(27,42,74,.08); border-radius:3px; overflow:hidden; }
   .rk-bar { height:100%; background:var(--orange); border-radius:3px; transition:width .7s; }
   .rk-pts { font-size:11px; color:var(--text-muted); min-width:70px; text-align:right; }
@@ -341,10 +350,19 @@ body { font-family:'Inter',sans-serif; background:var(--navy-deep); color:var(--
   .no-vote-cell { color:var(--text-muted); font-style:italic; }
   .winner-banner { background:linear-gradient(135deg,var(--navy) 0%,#2C4A7A 100%); border-radius:14px; padding:2rem; margin-bottom:1rem; position:relative; overflow:hidden; }
   .winner-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 60% 40%,rgba(245,166,35,.15),transparent 60%); }
-  .ranking-row { display:flex; align-items:center; gap:.65rem; padding:.5rem .65rem; border-radius:8px; margin-bottom:.3rem; background:var(--off-white); }
+  .ranking-row { display:flex; align-items:flex-start; gap:.65rem; padding:.5rem .65rem; border-radius:8px; margin-bottom:.3rem; background:var(--off-white); }
   .ranking-row.first { background:#FFF3D6; border:1px solid rgba(245,166,35,.3); }
   .rk-pos { font-size:13px; min-width:26px; color:var(--text-muted); }
-  .rk-name { flex:1; font-size:13px; color:var(--navy); font-weight:500; }
+  .rk-name { font-size:13px; color:var(--navy); font-weight:500; }
+  .rk-name-wrap { flex:1; display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .veto-badge {
+    display:inline-flex; align-items:center; gap:4px;
+    background:#fef2f2; border:1px solid #fecaca;
+    color:#dc2626; border-radius:6px;
+    font-size:11px; font-weight:600;
+    padding:2px 8px; width:fit-content;
+    cursor:default;
+  }
   .rk-bar-wrap { width:100px; height:5px; background:rgba(27,42,74,.08); border-radius:3px; overflow:hidden; }
   .rk-bar { height:100%; background:var(--orange); border-radius:3px; transition:width .7s; }
   .rk-pts { font-size:11px; color:var(--text-muted); min-width:70px; text-align:right; }
@@ -1900,10 +1918,13 @@ function renderResults() {
     const medal = rank===0?'🥇':rank===1?'🥈':rank===2?'🥉':(rank+1)+'.';
     const row = document.createElement('div');
     row.className = 'ranking-row' + (rank===0?' first':'');
-    row.innerHTML = '<div class="rk-pos">' + medal + '</div>' +
-      '<div class="rk-name">' + d.emoji + ' ' + d.name + (t.vetos.length?'  <span style="font-size:10px;color:#dc2626">'+t.vetos.length+'×🚫</span>':'') + '</div>' +
-      '<div class="rk-bar-wrap"><div class="rk-bar" style="width:' + barPct + '%"></div></div>' +
-      '<div class="rk-pts">' + t.pts + ' Pkt · ' + t.voters.length + ' Votes</div>';
+    const vetoHtml = t.vetos.length
+        ? '<span class="veto-badge" title="Veto von: ' + t.vetos.join(', ') + '">🚫 ' + t.vetos.join(', ') + '</span>'
+        : '';
+      row.innerHTML = '<div class="rk-pos">' + medal + '</div>' +
+        '<div class="rk-name-wrap"><div class="rk-name">' + d.emoji + ' ' + d.name + '</div>' + vetoHtml + '</div>' +
+        '<div class="rk-bar-wrap"><div class="rk-bar" style="width:' + barPct + '%"></div></div>' +
+        '<div class="rk-pts">' + t.pts + ' Pkt · ' + t.voters.length + ' Votes</div>';
     list.appendChild(row);
   });
 }
