@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UNEX Strategiemeeting FY 2027 – Destination Check</title>
+<title>UNEX Strategiemeeting FY 2026 – Destination Check</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 <style>
 /* ── TOKENS ── */
@@ -455,7 +455,7 @@ body { font-family:'Inter',sans-serif; background:var(--navy-deep); color:var(--
     <div class="unex-logo-sub">management consulting group</div>
   </div>
   <div class="intro-content">
-    <div class="intro-eyebrow">UNEX Strategiemeeting · FY 2027</div>
+    <div class="intro-eyebrow">UNEX Strategiemeeting · FY 2026</div>
     <h1 class="intro-title">Standort für das<br><em>Strategiemeeting</em></h1>
     <p class="intro-sub">8 Reiseziele mit Direktflügen ab Hamburg und München — September, Sonntag Hin & Mittwoch Rück. Jedes Ziel mit Fluginfos, Wetter, Aktivitäten und einer Team-Abstimmung.</p>
     <div class="intro-stats">
@@ -1421,7 +1421,7 @@ body { font-family:'Inter',sans-serif; background:var(--navy-deep); color:var(--
       <div class="admin-topbar">
         <div>
           <div style="font-size:.9rem;font-weight:700;color:white;letter-spacing:.05em">UNEX Admin</div>
-          <div style="font-size:.78rem;color:rgba(255,255,255,.5)">Strategiemeeting FY 2027</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.5)">Strategiemeeting FY 2026</div>
         </div>
         <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
           <span id="lastRefresh" style="font-size:11px;color:rgba(255,255,255,.35)"></span>
@@ -1466,7 +1466,7 @@ body { font-family:'Inter',sans-serif; background:var(--navy-deep); color:var(--
         <div id="resultsSection" style="display:none">
           <div class="winner-banner">
             <div style="position:relative;z-index:1;text-align:center">
-              <div style="font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:.4rem">UNEX Strategiemeeting FY 2027</div>
+              <div style="font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:.4rem">UNEX Strategiemeeting FY 2026</div>
               <div style="font-size:3.5rem;line-height:1;margin-bottom:.35rem">🏆</div>
               <div id="winnerName" style="font-family:'Playfair Display',serif;font-size:2rem;color:var(--orange)">—</div>
               <div id="winnerScore" style="font-size:.85rem;color:rgba(255,255,255,.4);margin-top:.25rem">—</div>
@@ -1552,7 +1552,7 @@ function showToast(msg) {
 }
 
 
-const STORAGE_KEY = 'unex_votes_fy2027_v1';
+const STORAGE_KEY = 'unex_votes_fy2026_v1';
 
 
 
@@ -1577,9 +1577,9 @@ function gasRowsToState(rows) {
     const row = rows[i];
     if (!row || !row[0]) continue;
     const person = row[0];
-    const ca = parseInt(row[11] || 0);
+    const ca = parseInt(row[10] || 0);
     if (ca > state.clearedAt) state.clearedAt = ca;
-    const ts = parseInt(row[10] || 0);
+    const ts = parseInt(row[9] || 0);
     if (!ts) continue;
     const vote = { ts };
     GS_DESTS.forEach((destId, idx) => {

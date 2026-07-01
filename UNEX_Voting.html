@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UNEX Strategiemeeting FY 2027 – Abstimmung</title>
+<title>UNEX Strategiemeeting FY 2026 – Abstimmung</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -117,7 +117,7 @@ body { font-family:'Inter',sans-serif; background:var(--off-white); color:var(--
 <div class="page">
   <div class="header">
     <div style="font-size:1rem;font-weight:700;color:var(--navy);letter-spacing:.05em;margin-bottom:.3rem">UNEX</div>
-    <div class="eyebrow">Strategiemeeting FY 2027</div>
+    <div class="eyebrow">Strategiemeeting FY 2026</div>
     <h1 class="title">Standortwahl</h1>
     <p class="subtitle">Wähle deinen Namen, vergib für jeden Standort bis zu 5 Sterne und bestätige deine Abstimmung. Die Ergebnisse bleiben bis zur Auswertung durch den Admin verborgen.</p>
   </div>
@@ -179,7 +179,7 @@ body { font-family:'Inter',sans-serif; background:var(--off-white); color:var(--
 // ══════════════════════════════════════════
 // CONFIG — shared across voting.html and master.html
 // ══════════════════════════════════════════
-const STORAGE_KEY = 'unex_votes_fy2027_v1';
+const STORAGE_KEY = 'unex_votes_fy2026_v1';
 const PERSONS = ['Benno','Mike','Arne','Robin','Niklas','Max'];
 const DESTS = [
   {id:'malta',    name:'Malta',    temp:'27°C', emoji:'🏝️'},
@@ -227,9 +227,9 @@ function gasRowsToState(rows) {
     const row = rows[i];
     if (!row || !row[0]) continue;
     const person = row[0];
-    const ca = parseInt(row[11] || 0);
+    const ca = parseInt(row[10] || 0);
     if (ca > state.clearedAt) state.clearedAt = ca;
-    const ts = parseInt(row[10] || 0);
+    const ts = parseInt(row[9] || 0);
     if (!ts) continue;
     const vote = { ts };
     GS_DESTS.forEach((destId, idx) => {
@@ -318,7 +318,7 @@ async function writeVotes(state) {
 let activePerson = null;
 let draft = {};
 let state = { votes: {}, resultsVisible: false };
-const myVotedKey = 'unex_my_vote_fy2027';
+const myVotedKey = 'unex_my_vote_fy2026';
 
 // ══════════════════════════════════════════
 // INIT
@@ -473,8 +473,10 @@ async function submitVote() {
   localStorage.setItem(myVotedKey + '_ts', Date.now());
   const syncInfo = window._lastSyncMode || 'unbekannt';
   const isShared = syncInfo.includes('google sheets ok');
-  toast(ok ? '✓ Stimme gespeichert & synchronisiert' : '✓ Gespeichert (nur lokal — Sheet nicht erreichbar)');
-  setTimeout(() => showSuccess(activePerson), 800);
+  // Re-enable button regardless of outcome
+  btn.disabled = false; btn.textContent = 'Abstimmung abschicken ↗';
+  toast(ok ? '✓ Stimme gespeichert & synchronisiert' : '⚠ Sheet nicht erreichbar — lokal gespeichert');
+  setTimeout(() => showSuccess(activePerson), 600);
 }
 
 // ══════════════════════════════════════════
